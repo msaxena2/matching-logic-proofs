@@ -25,6 +25,7 @@ data Line = Line Id deriving Show
 data Claim =   Claim Line Pattern deriving Show
 
 data Rule =   FuncSub Id Id 
+            | VarSubst Pattern Id Pattern 
             | EqSymmetric Id 
             | EqTrans Id Id  deriving Show
 
@@ -46,6 +47,9 @@ instance Show Proof where
 
 
 varT = Variable "t"
+
+varW :: Pattern
+varW = Variable "w"
 
 varY :: Pattern
 varY = Variable "y"
@@ -69,7 +73,7 @@ sPropagation = Claim (Line 3) $ Forall varX $
  
 identity :: Claim
 identity = Claim (Line 4) $ Forall varX $ 
-                            (varX`plus` Zero) `equals` varX
+                            (varX `plus` Zero) `equals` varX
 
 sExists :: Claim
 sExists = Claim (Line 5) $ Exists varT $
@@ -97,49 +101,53 @@ f3 = Formula (Line 9)
                 (Zero `plus` Succ(Succ(Zero))))
                 (FuncSub 7 3)
 
--- Alpha Renaming Needed. Step Correct module alpha renaming. 
 
 f4 :: Formula
 f4 = Formula (Line 10)
-              (Exists varZ $ Succ (Succ Zero) `equals` varZ)
-              (FuncSub 7 2) 
+        (Exists varW $ Succ Zero `equals` varW)
+        (VarSubst varZ 7 varW)
 
 f5 :: Formula
 f5 = Formula (Line 11)
-              ((Succ (Succ Zero)) `equals` (Zero `plus` (Succ (Succ Zero))))
-              (FuncSub 10 4)
-
--- Equality Symmetricity
+              (Exists varW $ Succ (Succ Zero) `equals` varW)
+              (FuncSub 10 2) 
 
 f6 :: Formula
 f6 = Formula (Line 12)
-              ((Zero `plus` (Succ (Succ Zero))) `equals` (Succ (Succ Zero)))
-              (EqSymmetric 11)
+              ((Succ (Succ Zero)) `equals` (Zero `plus` (Succ (Succ Zero))))
+              (FuncSub 11 4)
+
+-- Equality Symmetricity
 
 f7 :: Formula
-f7 = Formula (Line 13) 
-              (Succ (Zero `plus` Succ (Zero)) `equals` Succ (Succ Zero))
-              (EqTrans 9 12)
+f7 = Formula (Line 13)
+              ((Zero `plus` (Succ (Succ Zero))) `equals` (Succ (Succ Zero)))
+              (EqSymmetric 12)
 
 f8 :: Formula
 f8 = Formula (Line 14) 
-          (Forall varY $ (Succ (Succ Zero `plus` varY)) `equals` (Succ Zero `plus` (Succ varY)))
-          (FuncSub 7 3)
+              (Succ (Zero `plus` Succ (Zero)) `equals` Succ (Succ Zero))
+              (EqTrans 9 13)
 
 f9 :: Formula
 f9 = Formula (Line 15) 
-          ((Succ (Succ Zero `plus` Zero)) `equals` (Succ Zero `plus` (Succ Zero)))
-          (FuncSub 1 14)
+          (Forall varY $ (Succ (Succ Zero `plus` varY)) `equals` (Succ Zero `plus` (Succ varY)))
+          (FuncSub 7 3)
 
 f10 :: Formula
 f10 = Formula (Line 16) 
-          ((Succ Zero `plus` (Succ Zero)) `equals` (Succ (Succ Zero `plus` Zero)))
-          (EqSymmetric 15)
+          ((Succ (Succ Zero `plus` Zero)) `equals` (Succ Zero `plus` (Succ Zero)))
+          (FuncSub 1 15)
 
 f11 :: Formula
 f11 = Formula (Line 17) 
+          ((Succ Zero `plus` (Succ Zero)) `equals` (Succ (Succ Zero `plus` Zero)))
+          (EqSymmetric 16)
+
+f12 :: Formula
+f12 = Formula (Line 18) 
         ((Succ Zero `plus` (Succ Zero)) `equals` (Succ (Succ Zero)))
-        (EqTrans 16 12) 
+        (EqTrans 17 13)
 
 axioms :: [Claim]
 
