@@ -1,3 +1,5 @@
+import Data.Foldable (mapM_)
+
 type Name = String 
 
 data Pattern =    Variable Name 
@@ -15,27 +17,33 @@ equals a b = Equals a b
 
 plus :: Pattern -> Pattern -> Pattern
 
-plus a b = Equals a b 
+plus a b = Plus a b 
 
 type Id = Int
 
 data Rule = MyRule deriving Show
 
-data Claim =   Line Id Pattern
-             | ComplexLine Id Pattern Rule deriving Show
+data Line = Line Id deriving Show
+
+data Claim =   Claim Line Pattern deriving Show
+
+data Formula = Formula Line Pattern deriving Show
+ 
+
+data Proof = Proof [Claim] [Formula] 
 
 
-data Proof = Proof [Claim] 
-              
+instance Show Proof where 
+  show (Proof claims formulae) = 
+      do 
+        a <- total
+        show a ++ ['\n']
+        where 
+          claimsStr = fmap (show) claims  
+          formulaeStr = fmap (show) formulae  
+          total = claimsStr ++ formulaeStr  
 
 
-instance Show Proof where
-  show (Proof claims)  = do
-                          x <- claims
-                          show x ++ ['\n']
-
-
-varT :: Pattern
 varT = Variable "t"
 
 varY :: Pattern
@@ -45,36 +53,47 @@ varX :: Pattern
 varX = Variable "x"
 
 functionalZero :: Claim
-functionalZero = Line 1 $ Exists varT (Zero `equals` varT)
+functionalZero = Claim (Line 1) $ Exists varT (Zero `equals` varT)
 
 functionalSuc :: Claim
-functionalSuc = Line 2 $ Forall (varX) (Exists varY ( Succ (varX `equals` varY)))
+functionalSuc = Claim (Line 2) $ Forall (varX) (Exists varY ( Succ (varX `equals` varY)))
 
 sPropagation :: Claim
-sPropagation = Line 3 $ Forall varX $ 
+sPropagation = Claim (Line 3) $ Forall varX $ 
                           Forall varY $
                             Succ  (varX `plus`varY) `equals` (varX `plus` (Succ varY))
  
 identity :: Claim
-identity = Line 4 $ Forall varX $ 
+identity = Claim (Line 4) $ Forall varX $ 
                             (varX`plus` Zero) `equals` varX
 
 sExists :: Claim
-sExists = Line 5 $ Exists varT $
+sExists = Claim (Line 5) $ Exists varT $
                             (Succ varX) `equals` varT
+
+pExists :: Claim
+pExists = Claim (Line 6) $ Exists varT $
+                        (varX `plus` varY) `equals` varT
  
+-- s(0 + s(0)) = 0 + s(s(0))
+
+axioms :: [Claim]
+
+formulae :: [Formula]
 
 axioms = [ functionalZero
  , functionalSuc 
  , sPropagation
  , identity
  , sExists
+ , pExists
  ]
+
+formulae = []
 
 onePlusOneProof :: Proof 
 
-onePlusOneProof = Proof axioms
-
+onePlusOneProof = Proof axioms formulae
 
 
 
