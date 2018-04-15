@@ -1,3 +1,8 @@
-## Matching Logic Proofs
+# ML Proofs
 
-Proofs in Matching Logic 
+
+## Building
+stack build
+
+## Running
+stack exec prove
