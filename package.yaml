@@ -1,0 +1,41 @@
+name:                matching-logic-proofs 
+version:             0.1.0.0
+github:              "msaxena2/matching-logic-proofs"
+license:             "NCSA"
+author:              "Manasvi Saxena"
+maintainer:          "msaxena2@illinois.edu"
+copyright:           "2018 Manasvi Saxena" 
+
+extra-source-files:
+- README.md
+- ChangeLog.md
+
+
+description:         "Please see the README on Github at <https://github.com/msaxena2/matching-logic-proofs"
+
+dependencies:
+- base >= 4.7 && < 5
+
+library:
+  source-dirs: src
+
+executables:
+  prove:
+    main:                Main.hs
+    source-dirs:         
+    - src 
+    - app
+    ghc-options:
+    - -threaded
+    - -rtsopts
+    - -with-rtsopts=-N
+
+tests:
+  simple-test:
+    main:                Spec.hs
+    source-dirs:         test
+    ghc-options:
+    - -threaded
+    - -rtsopts
+    - -with-rtsopts=-N
+    dependencies:
