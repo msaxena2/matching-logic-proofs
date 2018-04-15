@@ -1,3 +1,5 @@
+module ProofUtils where
+
 type Name = String 
 
 data Pattern =    Variable Name 
@@ -20,16 +22,25 @@ plus a b = Plus a b
 type Id = Int
 
 
-data Line = Line Id deriving Show
+data Line = Line Id
 
-data Claim =   Claim Line Pattern deriving Show
+instance Show Line where
+  show (Line id) = (show id) ++ [':']
+
+data Claim =   Claim Line Pattern 
+
+instance Show Claim where
+  show (Claim l p) = show l ++ show p 
 
 data Rule =   FuncSub Id Id 
             | VarSubst Pattern Id Pattern 
             | EqSymmetric Id 
             | EqTrans Id Id  deriving Show
 
-data Formula = Formula Line Pattern Rule deriving Show
+data Formula = Formula Line Pattern Rule 
+
+instance Show Formula where
+  show (Formula l p r) = show l ++ show p ++ " by " ++  show r
 
 
 data Proof = Proof [Claim] [Formula] 
