@@ -33,11 +33,11 @@ The following is a syntax to output a proof object.
 
 
   <DerivedProofRule> ::=
-  |  eq(<Id>, <PathPosition>)                                /* Equality Substituion*/
-  |  funcsubst(<Variable>, <Pattern>, <Variable>, <Pattern>) /* Functional Substituion */
-  |  funcsubst-rule(<Id>, <Id>)                              /* Functional Substituion Rule */
-  |  eq-comm(<Id>)                                           /* Equality Commutativity */
-  |  eq-trans(<Id>, <Id>)                                    /* Equality Transitivity*/
+  |  eqsubst-rule(<Id>, <Pattern>, <PathPosition>)          /* Equality Substituion Rule */
+  |  funsubst(<Variable>, <Pattern>, <Variable>, <Pattern>) /* Functional Substituion */
+  |  funsubst-rule(<Id>, <Id>)                              /* Functional Substituion Rule */
+  |  eq-comm(<Id>)                                          /* Equality Commutativity */
+  |  eq-trans(<Id>, <Id>)                                   /* Equality Transitivity*/
 
 ```
 
@@ -105,12 +105,18 @@ proof rules and the arguments in `<ProofRule>`.
   /* Derived Proof Rules */
 
   |- P = Q implies |- C[P] = C[Q]
-  eq(id, pos)
+  eqsubst-rule(id, C, pos)
   where `C` is any context,
   and `P` and `Q` occur at position `pos` in `C`.
 
+  |- (exists t . P1 = t) /\ (forall x . P2) -> P2[P1/t]
+  funsubst(t, P1, x, P2)
+
+  |- exists t . P1 = t and |- forall x . P2 implies |- P2[P1/t]
+  funsubst-rule(id1, id2)
+
   |- P = Q implies |- Q = P
-  eq-comm(id)
+  eq-comm(id1)
 
   |- P = Q and |- Q = R implies |- P = R
   eq-trans(id1, id2)
@@ -163,6 +169,7 @@ proof checker extremely simple.
   `forall x . P`
 
 #### `id : Pattern by varsubst(x, P, y)`
+* Check that `y` doesn't have bound occurrence in `P`
 * Check that `Pattern` is syntactically equal to
   `(forall x . P) -> P[y/x]`
 
@@ -185,30 +192,39 @@ proof checker extremely simple.
 * ------ Check that `Qi` is syntactically equal to `Right1`
 
 #### `id : Pattern by propagate-bot(sigma, k)`
-* Check that `Pattern` has the form `P1 -> P2`
-* Check that `P1` has the form `sigma(...)`
-* Grab the kth argument of `P1`, denoted as `Q1`
-* Check that `Q1` is syntactically equal to `bot`
-* Check that `P2` is syntactically equal to `bot`
+* Check that `Pattern`  has the form `Left -> Right`
+* Check that `Left` has the form `sigma(...)`
+* Grab the kth argument of `Left`, denoted as `P`
+* Check that `P` is syntactically equal to `bot`
+* Check that `Right` is syntactically equal to `bot`
 
 #### `id : Pattern by propagate-or(sigma, k, P, Q)`
-* Check that `Pattern` has the form `P1 -> (P2 \/ P3)`
-* Check that `P1`, `P2`, `P3` all have the form `sigma(...)`
-* Grab the kth argument of `P1`, denoted as `Q1`
-* Grab the kth argument of `P2`, denoted as `Q2`
-* Grab the kth argument of `P3`, denoted as `Q3`
-* Check that `Q1` is syntactically equal to `P \/ Q`
-* Check that `Q2` is syntactically equal to `P`
-* Check that `Q3` is syntactically equal to `Q`
+* Check that `Pattern`  has the form `Left -> (RightA \/ RightB)`
+* Check that `Left`, `RightA`, `RightB` all have the form `sigma(...)`
+* For each `i = 1 ... N` where `N` is the number of arguments in `Left`
+* --- Grab the ith argument of `Left`, `RightA`, `RightB`
+  --- and denote them as `Li`, `RAi`, and `RBi`
+* --- if `i` is not `k`
+* ------ Check that `Li`, `RAi`, and `RBi` are syntactically equal
+* --- else
+* ------ Check that `Li` is syntactically equal to `P \/ Q`
+* ------ Check that `RAi` is syntactically equal to `P`
+* ------ Check that `RBi` is syntactically equal to `Q`
 
 #### `id : Pattern by propagate-exists(sigma, k, x, P)`
-* Check that `Pattern` has the form `P1 -> exists x . P2`
-* Check that `P1` and `P2` have the form `sigma(...)`
-* Grab the kth argument of `P1`, denoted as `Q1`
-* Grab the kth argument of `P2`, denoted as `Q2`
-* Check that `Q1` is syntactically equal to `exists x . P`
-* Check that `Q2` is syntactically equal to `P`
-* Check that `x` does not occur free in `P1`
+* Check that `Pattern`  has the form `Left -> Right`
+* Check that `x` doesn't occur free in `Left`
+* Check that `Left` has the form `sigma(...)`
+* Check that `Right` has the form `exists x . Q`
+* Check that `Q` has the form `sigma(...)`
+* For each `i = 1 ... N` where `N` is the number of arguments in `Left`
+* --- Grab the ith argument of `Left`, `P`
+  --- and denote them as `Li` and `Pi`
+* --- if `i` is not `k`
+* ------ Check that `Li` and `Pi` are syntactically equal
+* --- else
+* ------ Check that `Li` is syntactically equal to `exists x . P`
+* ------ Check that `Pi` is syntactically equal to `P`
 
 #### `id : Pattern by existence(x)`
 * Check that `Pattern` is syntactically equal to `exists x . x`
@@ -222,21 +238,33 @@ proof checker extremely simple.
 * Check the path to `pos1` in `C1` contains only symbols
 * Check the path to `pos2` in `C2` contains only symbols
 
-#### `id : Pattern by eq(id1, pos)`
-* Grab from the previous claims `id1 : P`
-* Check that `P` has the form `Q1 = Q2`
-* Check that `Pattern` has the form `C1 = C2`
-* Grab the subpattern at position `pos` of `C1`, denoted as `P1`
-* Grab the subpattern at position `pos` of `C2`, denoted as `P2`
-* Check `P1` is syntactically equal to `Q1`
-* Check `P2` is syntactically equal to `Q2`
+#### `id : Pattern by eqsubst-rule(id1, C, pos)`
+* Grab from the previous claims `id1 : Pattern1`
+* Check that `Pattern1` has the form `P = Q`
+* Check that `Pattern` has the form `Left = Right`
+* Substitute at `pos` in `C` the pattern `P` and obtain `CP` /* purely term substitution, no implicit alpha-renaming, no occur-free checking */
+* Substitute at `pos` in `C` the pattern `Q` and obtain `CQ` /* purely term substitution, no implicit alpha-renaming, no occur-free checking */
+* Check that `Left` and `CP` are syntactically equal
+* Check that `Right` and `CQ` are syntactically equal
+
+#### `id : Pattern by funsubst(t, P1, x, P2)`
+* Check that all free variables in `P1` has no bound occurrence in `P2`
+* Check that `Pattern` has the form `EP /\ FP -> CP`
+* Check that `EP` equals `exists t . P1 = t`
+* Check that `FP` equals `forall x . P2`
+* Check that `CP` equals `P2[P1/t]`
+
+#### `id : Pattern by funsubst-rule(id1, id2)`
+* Grab `id1 : Pattern1` and `id2 : Pattern2`
+* Check that `Pattern1` has the form `exists t . P1 = t`
+* Check that `Pattern2` has the form `forall x . P2`
+* Check that all free variables in `P1` has no bound occurrence in `P2`
+* Check that `Pattern` has the form `P2[P1/t]`
 
 #### `id : Pattern by eq-comm(id1)`
-* Grab from the previous claims `id1 : P`
-* Check that `P` has the form `Q1 = Q2`
-* Check that `Pattern` has the form `P1 = P2`
-* Check that `Q1` is syntactically equal to `P2`
-* Check that `Q2` is syntactically equal to `P1`
+* Grab `id1 : Pattern1`
+* Check that `Pattern1` has the form `P = Q`
+* Check that `Pattern` has the form `Q = P`
 
 #### `id : Pattern by eq-trans(id1,id2)`
 * Grab from the previous claims `id1 : P1`
