@@ -17,6 +17,7 @@ The following is a syntax to output a proof object.
   | ug(<Variable>, <Id>)
   | varsubst(<Variable>, <Pattern>, <Variable>)
   | forall(<Variable>, <Pattern>, <Pattern>)
+  | frame(<Id>, <Symbol>, <Position>)
   | propagate-bot(<Symbol>, <Position>)
   | propagate-or(<Symbol>, <Position>, <Pattern>, <Pattern>)
   | propagate-exists(<Symbol>, <Position>, <Variable>, <Pattern>)
@@ -76,6 +77,10 @@ proof rules and the arguments in `<ProofRule>`.
 
   |- (forall x . P -> Q) -> P -> forall x . Q
   forall(x, P, Q)
+ 
+  |- P -> Q implies |- sigma(..., P, ...) -> sigma(..., Q, ...)
+  frame(id1, sigma, k)
+  where P and Q appear as the kth arguments.
 
   |- sigma(..., bot, ...) -> bot
   propagate-bot(sigma, k)
@@ -165,6 +170,19 @@ proof checker extremely simple.
 * Check that `Pattern` is syntactically equal to
   `(forall x . P -> Q) -> P -> forall x . Q`
 * Check that `x` does not occur free in `P`
+
+#### `id : Pattern by frame(id1, sigma, k)`
+* Grab from the previous claims `id1 : Pattern1`
+* Check that `Pattern1` has the form `Left1 -> Right1`
+* Check that `Pattern`  has the form `Left -> Right`
+* Check that `Left` and `Right` both have the form `sigma(...)`
+* For each `i = 1 ... N` where `N` is the number of arguments in `Left`
+* --- Grab the ith argument of `Left` and `Left`, denoted as `Pi` and `Qi`
+* --- if `i` is not `k`
+* ------ Check that `Pi` is syntactically equal to `Qi`
+* --- else
+* ------ Check that `Pi` is syntactically equal to `Left1`
+* ------ Check that `Qi` is syntactically equal to `Right1`
 
 #### `id : Pattern by propagate-bot(sigma, k)`
 * Check that `Pattern` has the form `P1 -> P2`
