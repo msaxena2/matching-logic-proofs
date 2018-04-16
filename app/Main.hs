@@ -1,7 +1,10 @@
 module Main where
-
+import Data.Text.Prettyprint.Doc  
 import ProofUtils 
+import Data.Void
+
+
 
 main :: IO ()
-main = do
-  putStrLn $ show onePlusOneProof
+
+main = putStrLn $ show (viaShow onePlusOneProof)
