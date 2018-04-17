@@ -4,7 +4,6 @@ import ProofUtils
 import Data.Void
 
 
-
 main :: IO ()
 
-main = putStrLn $ show (viaShow onePlusOneProof)
+main = print $ viaShow (renderProof onePlusOneProof)

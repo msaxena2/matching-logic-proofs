@@ -1,4 +1,7 @@
+{-# LANGUAGE OverloadedStrings #-}
+
 module ProofUtils where
+import Data.Text.Prettyprint.Doc hiding (equals) 
 
 type Name = String 
 
@@ -21,16 +24,14 @@ plus a b = Plus a b
 
 type Id = Int
 
-
 data Line = Line Id
 
-instance Show Line where
-  show (Line id) = (show id) ++ [':']
+instance Pretty Line where
+  pretty (Line id) = (pretty id) <+> ":" 
+
 
 data Claim =   Claim Line Pattern 
 
-instance Show Claim where
-  show (Claim l p) = show l ++ show p 
 
 data Rule =   FuncSub Id Id 
             | VarSubst Pattern Id Pattern 
@@ -39,23 +40,19 @@ data Rule =   FuncSub Id Id
 
 data Formula = Formula Line Pattern Rule 
 
-instance Show Formula where
-  show (Formula l p r) = show l ++ show p ++ " by " ++  show r
-
 
 data Proof = Proof [Claim] [Formula] 
 
+instance Pretty Claim where
+  pretty (Claim (Line id) pattern) = (pretty id) <+> ":" <+> pretty (show pattern) 
 
-instance Show Proof where 
-  show (Proof claims formulae) = 
-      do 
-        a <- total
-        show a ++ ['\n']
-        where 
-          claimsStr = fmap (show) claims  
-          formulaeStr = fmap (show) formulae  
-          total = claimsStr ++ formulaeStr  
+instance Pretty Formula where
+  pretty (Formula (Line id) pattern rule) = (pretty id) <+> ":" <+> pretty (show pattern) 
+                                                <+> "by" <+> pretty (show rule)
 
+
+instance Pretty Proof where 
+  pretty (Proof claims formulae) = vsep $ (pretty <$> claims) ++ (pretty <$> formulae)
 
 varT = Variable "t"
 
@@ -172,9 +169,12 @@ axioms = [ functionalZero
  , pExists
  ]
 
-formulae = [f1, f2, f3, f4, f5, f6, f7, f8, f9, f10, f11]
+formulae = [f1, f2, f3, f4, f5, f6, f7, f8, f9, f10, f11, f12]
 
 onePlusOneProof :: Proof 
 
 onePlusOneProof = Proof axioms formulae
+
+
+renderProof p = pretty p 
 
