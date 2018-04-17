@@ -16,13 +16,13 @@ data Pattern =    Variable Name
 
 instance Pretty Pattern where
   pretty p = case p of
-              (Exists p1 p2) -> "\\exists{Nat}"      <+> "(" <+> (pretty p1) <+> "," <+> (pretty p2) <+> ")"
-              (Variable v)   -> (pretty v)           <+> ":Nat"
-              (Forall p1 p2) -> "\\forall{Nat}"      <+> "(" <+> (pretty p1) <+> "," <+> (pretty p2) <+> ")"
-              (Equals p1 p2) -> "\\equals{Nat, Nat}" <+> "(" <+> (pretty p1) <+> "," <+> (pretty p2) <+> ")"
-              (Plus p1 p2)   -> "Plus{}"             <+> "(" <+> (pretty p1) <+> "," <+> (pretty p2) <+> ")"
-              (Succ p1)      -> "Succ{}"             <+> "(" <+> (pretty p1) <+> ")"
-              (Zero)         -> "Zero{}()" 
+              (Exists p1 p2) -> "\\exists{Nat{}}"        <+> tupled ([pretty p1, pretty p2])
+              (Variable v)   -> hcat [pretty v, ":Nat{}"]
+              (Forall p1 p2) -> "\\forall{Nat{}}"        <+> (tupled [(pretty p1), (pretty p2)])
+              (Equals p1 p2) -> "\\equals{Nat{}, Nat{}}" <+> (tupled [(pretty p1), (pretty p2)])
+              (Plus p1 p2)   -> "Plus{}"                 <+> (tupled [(pretty p1), (pretty p2)])
+              (Succ p1)      -> "Succ{}"                 <+> (tupled [pretty p1])
+              (Zero)         -> "Zero{}()"
 
 
 equals :: Pattern -> Pattern -> Pattern
@@ -48,12 +48,14 @@ data Rule =   FuncSub Id Id
             | VarSubst Pattern Id Pattern 
             | EqSymmetric Id 
             | EqTrans Id Id  
+            | EqSubst Id Pattern Int
 
 instance Pretty Rule where
-  pretty (FuncSub i1 i2)     = "funsubst-rule" <+> "(" <+> (pretty i1) <+> "," <+> (pretty i2) <+> ")"
-  pretty (VarSubst p1 i1 p2) = "varsubst"      <+> "(" <+> (pretty p1) <+> "," <+> (pretty i1) <+> "," <+> (pretty p2) <+> ")"
-  pretty (EqTrans i1 i2)     = "eq-trans"      <+> "(" <+> (pretty i1) <+> "," <+> (pretty i2) <+> ")"
-  pretty (EqSymmetric i1)    = "eq-comm"       <+> "(" <+> (pretty i1) <+> ")"
+  pretty (FuncSub i1 i2)     = "funsubst-rule" <+> (tupled ([pretty i1, pretty i2]))
+  pretty (VarSubst p1 i1 p2) = "varsubst"      <+> (tupled [pretty p1, pretty i1, pretty p2]) 
+  pretty (EqTrans i1 i2)     = "eq-trans"      <+> (tupled ([pretty i1, pretty i2]))
+  pretty (EqSymmetric i1)    = "eq-comm"       <+> (tupled ([pretty i1]))
+  pretty (EqSubst i1 p ps)   = "eqsubst-rule"  <+> (tupled $ [pretty i1, pretty p, pretty ps])
 
 data Formula = Formula Line Pattern Rule 
 
@@ -71,108 +73,82 @@ instance Pretty Formula where
 instance Pretty Proof where 
   pretty (Proof claims formulae) = vsep $ (pretty <$> claims) ++ (pretty <$> formulae)
 
-varT = Variable "t"
+varT = Variable "T"
 
 varW :: Pattern
-varW = Variable "w"
+varW = Variable "W"
 
 varY :: Pattern
-varY = Variable "y"
+varY = Variable "Y"
 
 varX :: Pattern
-varX = Variable "x"
+varX = Variable "X"
 
 varZ :: Pattern
-varZ = Variable "z"
+varZ = Variable "Z"
 
+-- Functional Pattern Axioms
 functionalZero :: Claim
 functionalZero = Claim (Line 1) $ Exists varT (Zero `equals` varT)
 
 functionalSuc :: Claim
-functionalSuc = Claim (Line 2) $ Forall (varX) (Exists varZ ( Succ varX `equals` varZ))
+functionalSuc = Claim (Line 2) $ Forall (varX) (Exists varT ( Succ varX `equals` varT))
 
-sPropagation :: Claim
-sPropagation = Claim (Line 3) $ Forall varX $ 
-                          Forall varY $
-                            Succ  (varX `plus`varY) `equals` (varX `plus` (Succ varY))
- 
+functionalPlus :: Claim
+functionalPlus = Claim (Line 3) $ Forall varX $ 
+                                    Forall varY $
+                                      Exists varT $
+                                        varX `plus`varY `equals` varT
+-- Nat Plus and Zero Axioms
 identity :: Claim
 identity = Claim (Line 4) $ Forall varX $ 
-                            (varX `plus` Zero) `equals` varX
+                             (varX `plus` Zero) `equals` varX
 
-sExists :: Claim
-sExists = Claim (Line 5) $ Exists varT $
-                            (Succ varX) `equals` varT
-
-pExists :: Claim
-pExists = Claim (Line 6) $ Exists varT $
-                        (varX `plus` varY) `equals` varT
-
-
+sPropagation :: Claim
+sPropagation = Claim (Line 5) $ Forall varX $ 
+                                  Forall varY $
+                                    (varX `plus` (Succ varY)) `equals` Succ (varX `plus` varY)
+ 
+-- Formulae for proof
 f1 :: Formula 
-f1 = Formula (Line 7)
-      (Exists varZ $ Succ Zero `equals` varZ)
+f1 = Formula (Line 6)
+      (Exists varT $ Succ Zero `equals` varT)
         (FuncSub 1 2)
 
 f2 :: Formula
-f2 = Formula (Line 8) 
-              (Forall varY ((Succ (Zero `plus` varY)) `equals` 
-                (Zero `plus` Succ(varY))))
-                (FuncSub 1 3)
-      
-f3 :: Formula
-f3 = Formula (Line 9) 
-              (Succ (Zero `plus` Succ (Zero)) `equals` 
-                (Zero `plus` Succ(Succ(Zero))))
-                (FuncSub 7 3)
+f2 = Formula (Line 7) 
+              (Forall varY  
+                ((Succ Zero) `plus` Succ(varY))
+                  `equals` 
+                (Succ ((Succ Zero) `plus` varY)))
+                (FuncSub 6 5)
 
+f3 :: Formula
+f3 = Formula (Line 8) 
+                (((Succ Zero) `plus` Succ(Zero))
+                  `equals` 
+                 (Succ ((Succ Zero) `plus` Zero)))
+                (FuncSub 1 7)
+
+      
 
 f4 :: Formula
-f4 = Formula (Line 10)
-        (Exists varW $ Succ Zero `equals` varW)
-        (VarSubst varZ 7 varW)
+f4 = Formula (Line 9)
+        (((Succ Zero) `plus` Zero) `equals` (Succ Zero))
+        (FuncSub 6 4)
 
 f5 :: Formula
-f5 = Formula (Line 11)
-              (Exists varW $ Succ (Succ Zero) `equals` varW)
-              (FuncSub 10 2) 
+f5 = Formula (Line 10)
+        (Succ ((Succ Zero) `plus` Zero) `equals` (Succ (Succ Zero)))
+        (EqSubst 9 (Succ (varX)) 0)
 
 f6 :: Formula
-f6 = Formula (Line 12)
-              ((Succ (Succ Zero)) `equals` (Zero `plus` (Succ (Succ Zero))))
-              (FuncSub 11 4)
+f6 =  Formula (Line 11) 
+        (((Succ Zero) `plus` Succ(Zero))
+          `equals` 
+         (Succ (Succ Zero)))
+        (EqTrans 8 10)
 
--- Equality Symmetricity
-
-f7 :: Formula
-f7 = Formula (Line 13)
-              ((Zero `plus` (Succ (Succ Zero))) `equals` (Succ (Succ Zero)))
-              (EqSymmetric 12)
-
-f8 :: Formula
-f8 = Formula (Line 14) 
-              (Succ (Zero `plus` Succ (Zero)) `equals` Succ (Succ Zero))
-              (EqTrans 9 13)
-
-f9 :: Formula
-f9 = Formula (Line 15) 
-          (Forall varY $ (Succ (Succ Zero `plus` varY)) `equals` (Succ Zero `plus` (Succ varY)))
-          (FuncSub 7 3)
-
-f10 :: Formula
-f10 = Formula (Line 16) 
-          ((Succ (Succ Zero `plus` Zero)) `equals` (Succ Zero `plus` (Succ Zero)))
-          (FuncSub 1 15)
-
-f11 :: Formula
-f11 = Formula (Line 17) 
-          ((Succ Zero `plus` (Succ Zero)) `equals` (Succ (Succ Zero `plus` Zero)))
-          (EqSymmetric 16)
-
-f12 :: Formula
-f12 = Formula (Line 18) 
-        ((Succ Zero `plus` (Succ Zero)) `equals` (Succ (Succ Zero)))
-        (EqTrans 17 13)
 
 axioms :: [Claim]
 
@@ -180,18 +156,15 @@ formulae :: [Formula]
 
 axioms = [ functionalZero
  , functionalSuc 
- , sPropagation
+ , functionalPlus
  , identity
- , sExists
- , pExists
+ , sPropagation
  ]
 
-formulae = [f1, f2, f3, f4, f5, f6, f7, f8, f9, f10, f11, f12]
+formulae = [f1, f2, f3, f4, f5, f6]
 
 onePlusOneProof :: Proof 
 
 onePlusOneProof = Proof axioms formulae
 
-
-renderProof p = pretty p 
-
+-- renderProof p = pageWidth Unbounded (pretty p) 
