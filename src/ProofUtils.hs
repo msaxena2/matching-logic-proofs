@@ -11,7 +11,18 @@ data Pattern =    Variable Name
               |   Equals Pattern Pattern
               |   Plus Pattern Pattern
               |   Succ Pattern
-              |   Zero  deriving (Show)
+              |   Zero  
+
+
+instance Pretty Pattern where
+  pretty p = case p of
+              (Exists p1 p2) -> "\\exists{Nat}"      <+> "(" <+> (pretty p1) <+> "," <+> (pretty p2) <+> ")"
+              (Variable v)   -> (pretty v)           <+> ":Nat"
+              (Forall p1 p2) -> "\\forall{Nat}"      <+> "(" <+> (pretty p1) <+> "," <+> (pretty p2) <+> ")"
+              (Equals p1 p2) -> "\\equals{Nat, Nat}" <+> "(" <+> (pretty p1) <+> "," <+> (pretty p2) <+> ")"
+              (Plus p1 p2)   -> "Plus{}"             <+> "(" <+> (pretty p1) <+> "," <+> (pretty p2) <+> ")"
+              (Succ p1)      -> "Succ{}"             <+> "(" <+> (pretty p1) <+> ")"
+              (Zero)         -> "Zero{}()" 
 
 
 equals :: Pattern -> Pattern -> Pattern
@@ -36,7 +47,13 @@ data Claim =   Claim Line Pattern
 data Rule =   FuncSub Id Id 
             | VarSubst Pattern Id Pattern 
             | EqSymmetric Id 
-            | EqTrans Id Id  deriving Show
+            | EqTrans Id Id  
+
+instance Pretty Rule where
+  pretty (FuncSub i1 i2)     = "funsubst-rule" <+> "(" <+> (pretty i1) <+> "," <+> (pretty i2) <+> ")"
+  pretty (VarSubst p1 i1 p2) = "varsubst"      <+> "(" <+> (pretty p1) <+> "," <+> (pretty i1) <+> "," <+> (pretty p2) <+> ")"
+  pretty (EqTrans i1 i2)     = "eq-trans"      <+> "(" <+> (pretty i1) <+> "," <+> (pretty i2) <+> ")"
+  pretty (EqSymmetric i1)    = "eq-comm"       <+> "(" <+> (pretty i1) <+> ")"
 
 data Formula = Formula Line Pattern Rule 
 
@@ -44,11 +61,11 @@ data Formula = Formula Line Pattern Rule
 data Proof = Proof [Claim] [Formula] 
 
 instance Pretty Claim where
-  pretty (Claim (Line id) pattern) = (pretty id) <+> ":" <+> pretty (show pattern) 
+  pretty (Claim (Line id) pattern) = (pretty id) <+> ":" <+> pretty pattern 
 
 instance Pretty Formula where
-  pretty (Formula (Line id) pattern rule) = (pretty id) <+> ":" <+> pretty (show pattern) 
-                                                <+> "by" <+> pretty (show rule)
+  pretty (Formula (Line id) pattern rule) = (pretty id) <+> ":" <+> pretty pattern 
+                                                <+> "by" <+> pretty rule 
 
 
 instance Pretty Proof where 
