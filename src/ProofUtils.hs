@@ -20,9 +20,9 @@ instance Pretty Pattern where
               (Variable v)   -> hcat [pretty v, ":Nat{}"]
               (Forall p1 p2) -> "\\forall{Nat{}}"        <+> (tupled [(pretty p1), (pretty p2)])
               (Equals p1 p2) -> "\\equals{Nat{}, Nat{}}" <+> (tupled [(pretty p1), (pretty p2)])
-              (Plus p1 p2)   -> "Plus{}"                 <+> (tupled [(pretty p1), (pretty p2)])
-              (Succ p1)      -> "Succ{}"                 <+> (tupled [pretty p1])
-              (Zero)         -> "Zero{}()"
+              (Plus p1 p2)   -> "plus{}"                 <+> (tupled [(pretty p1), (pretty p2)])
+              (Succ p1)      -> "succ{}"                 <+> (tupled [pretty p1])
+              (Zero)         -> "zero{}()"
 
 
 equals :: Pattern -> Pattern -> Pattern
