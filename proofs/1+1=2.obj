@@ -7,5 +7,5 @@
 7 : \equals{Nat{}, Nat{}}(\forall{Nat{}}(Y:Nat{}, plus{}(succ{}(zero{}()), succ{}(Y:Nat{}))), succ{}(plus{}(succ{}(zero{}()), Y:Nat{}))) by funsubst-rule(6, 5)
 8 : \equals{Nat{}, Nat{}}(plus{}(succ{}(zero{}()), succ{}(zero{}())), succ{}(plus{}(succ{}(zero{}()), zero{}()))) by funsubst-rule(1, 7)
 9 : \equals{Nat{}, Nat{}}(plus{}(succ{}(zero{}()), zero{}()), succ{}(zero{}())) by funsubst-rule(6, 4)
-10 : \equals{Nat{}, Nat{}}(succ{}(plus{}(succ{}(zero{}()), zero{}())), succ{}(succ{}(zero{}()))) by eqsubst-rule(9, succ{}(X:Nat{}), 0)
+10 : \equals{Nat{}, Nat{}}(succ{}(plus{}(succ{}(zero{}()), zero{}())), succ{}(succ{}(zero{}()))) by eqsubst-rule(9, succ{}(HOLE:Nat{}), 1)
 11 : \equals{Nat{}, Nat{}}(plus{}(succ{}(zero{}()), succ{}(zero{}())), succ{}(succ{}(zero{}()))) by eq-trans(8, 10)
