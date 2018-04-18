@@ -16,12 +16,12 @@ data Pattern =    Variable Name
 
 instance Pretty Pattern where
   pretty p = case p of
-              (Exists p1 p2) -> "\\exists{Nat{}}"        <+> tupled ([pretty p1, pretty p2])
-              (Variable v)   -> hcat [pretty v, ":Nat{}"]
-              (Forall p1 p2) -> "\\forall{Nat{}}"        <+> (tupled [(pretty p1), (pretty p2)])
-              (Equals p1 p2) -> "\\equals{Nat{}, Nat{}}" <+> (tupled [(pretty p1), (pretty p2)])
-              (Plus p1 p2)   -> "plus{}"                 <+> (tupled [(pretty p1), (pretty p2)])
-              (Succ p1)      -> "succ{}"                 <+> (tupled [pretty p1])
+              (Exists p1 p2) -> "\\exists{Nat{}}"        <> (tupled ([pretty p1, pretty p2]))
+              (Variable v)   -> (pretty v)               <> ":Nat{}"
+              (Forall p1 p2) -> "\\forall{Nat{}}"        <> (tupled [(pretty p1), (pretty p2)])
+              (Equals p1 p2) -> "\\equals{Nat{}, Nat{}}" <> (tupled [(pretty p1), (pretty p2)])
+              (Plus p1 p2)   -> "plus{}"                 <> (tupled [(pretty p1), (pretty p2)])
+              (Succ p1)      -> "succ{}"                 <> (tupled [pretty p1])
               (Zero)         -> "zero{}()"
 
 
@@ -51,11 +51,11 @@ data Rule =   FuncSub Id Id
             | EqSubst Id Pattern Int
 
 instance Pretty Rule where
-  pretty (FuncSub i1 i2)     = "funsubst-rule" <+> (tupled ([pretty i1, pretty i2]))
-  pretty (VarSubst p1 i1 p2) = "varsubst"      <+> (tupled [pretty p1, pretty i1, pretty p2]) 
-  pretty (EqTrans i1 i2)     = "eq-trans"      <+> (tupled ([pretty i1, pretty i2]))
-  pretty (EqSymmetric i1)    = "eq-comm"       <+> (tupled ([pretty i1]))
-  pretty (EqSubst i1 p ps)   = "eqsubst-rule"  <+> (tupled $ [pretty i1, pretty p, pretty ps])
+  pretty (FuncSub i1 i2)     = "funsubst-rule" <> (tupled ([pretty i1, pretty i2]))
+  pretty (VarSubst p1 i1 p2) = "varsubst"      <> (tupled [pretty p1, pretty i1, pretty p2]) 
+  pretty (EqTrans i1 i2)     = "eq-trans"      <> (tupled ([pretty i1, pretty i2]))
+  pretty (EqSymmetric i1)    = "eq-comm"       <> (tupled ([pretty i1]))
+  pretty (EqSubst i1 p ps)   = "eqsubst-rule"  <> (tupled $ [pretty i1, pretty p, pretty ps])
 
 data Formula = Formula Line Pattern Rule 
 
