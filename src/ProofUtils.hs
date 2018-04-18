@@ -87,6 +87,9 @@ varX = Variable "X"
 varZ :: Pattern
 varZ = Variable "Z"
 
+varHOLE :: Pattern
+varHOLE = Variable "HOLE"
+
 -- Functional Pattern Axioms
 functionalZero :: Claim
 functionalZero = Claim (Line 1) $ Exists varT (Zero `equals` varT)
@@ -140,7 +143,7 @@ f4 = Formula (Line 9)
 f5 :: Formula
 f5 = Formula (Line 10)
         (Succ ((Succ Zero) `plus` Zero) `equals` (Succ (Succ Zero)))
-        (EqSubst 9 (Succ (varX)) 0)
+        (EqSubst 9 (Succ (varHOLE)) 1)
 
 f6 :: Formula
 f6 =  Formula (Line 11) 
